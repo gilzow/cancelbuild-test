@@ -61,7 +61,8 @@ jobs:
           # @todo add something for when we get something that isn't exactly one
           newActivityID=$(p activity:list -t environment.push --state=in_progress -e "${PR_NUMBER}" -p "${PLATFORMSH_PROJECT_ID}" --no-header --columns=ID --format=plain)
           echo "::notice::the activity id is ${newActivityID}"
-          echo "activityID=${newActivityID}" >> $GITHUB_OUTPUT
+          #echo "activityID=${newActivityID}" >> $GITHUB_OUTPUT
+          echo "::set-output name=activityID::${newActivityID}"
       - name: "Cancel the activity"
         id: cancel-build-activity
         run: |
