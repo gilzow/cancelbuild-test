@@ -46,6 +46,7 @@ You don't need to have a PHP environment with composer installed.
     * The frontend: <http://localhost>
     * The admin interface, using the credentials you have chosen above:
       <http://localhost/admin>
+    * Well you THINK you're done...
 
 ## Other demo/skeleton packages
 - [Pimcore Basic Demo](https://github.com/pimcore/demo)
