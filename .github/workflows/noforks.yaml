@@ -21,6 +21,8 @@ jobs:
     # if: ${{ github.event.pull_request.head.repo.fork }}
     if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Install the platform.sh cli tool
         id: install-psh-cli
         run: |
@@ -30,7 +32,6 @@ jobs:
           platform p:info
 
       - name: 'Get project ID'
-        uses: actions/checkout@v2
         run: |
           # grab the array entries where config.url contain 'platform.sh' then map back to an array. if our
           # array length is 1, return the entry for config.url, otherwise return error
