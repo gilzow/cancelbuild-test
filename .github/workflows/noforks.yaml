@@ -1,0 +1,77 @@
+####
+# if the source of the pull request is from a fork, ie not from the repo itself, we want to find the activity id for
+# the push from github to psh, then using that id, cancel the activity
+name: No PR Builds from forks
+on:
+    pull_request:
+        branches:
+            - master
+            - main
+env:
+    PLATFORMSH_CLI_TOKEN: ${{ secrets.TEMPLATES_CLI_TOKEN }}
+    # IF the above doesnt work, try
+    #  PLATFORMSH_CLI_TOKEN: ${{ secrets.PLATFORMSHTOKEN }}
+    PR_NUMBER: ${{ github.event.number }}
+jobs:
+    no-pr-from-forks:
+        name: No PRs from Forks
+        runs-on: ubuntu-latest
+        # if the name of the repo from the pull request isnt the name of the repo then it is a fork
+        # This might work as well
+        # if: ${{ github.event.pull_request.head.repo.fork }}
+        if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+        steps:
+            - name: Install the platform.sh cli tool
+              id: install-psh-cli
+              run: |
+                  curl -sS https://platform.sh/cli/installer | php
+                  # for some reason, sourcing our .bashrc file does not successfully prepend our path to PATH
+                  export PATH="${HOME}/.platformsh/bin:${PATH}"
+                  platform p:info
+            - uses: actions/checkout@v2
+            - name: 'Get project ID'
+              run: |
+                    # grab the array entries where config.url contain 'platform.sh' then map back to an array. if our
+                    # array length is 1, return the entry for config.url, otherwise return error
+                    # @todo move this into a retrievable action
+                    integrationURL=$(gh api "/repos/${{ github.repository }}/hooks" | jq 'map(select(.config.url | contains("platform.sh"))) | if . | length == 1 then .[0].config.url else "error" end')
+                    if [[ "error" == "${integrationURL}" ]]; then
+                        echo "::error::Either more than one webhook, or zero webhooks were returned. I was expecting just one."
+                        exit 1
+                    fi
+                    
+                    projIDpttrn='\/projects\/([^\/]+)\/integrations'
+                    if [[ "${integrationURL}" =~ ${projIDpttrn} ]]; then
+                        echo "PLATFORMSH_PROJECT_ID=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+                        echo "Project ID is ${PLATFORMSH_PROJECT_ID}"
+                    else
+                        echo "::error::We were unable to extract the project ID from the integration url of ${integrationURL}"
+                        exit 1
+                    fi
+            - name: Get the activity ID
+              id: get-activity-id
+              run: |
+                  if [[ "${PATH}" != *".platformsh"* ]]; then
+                    echo "psh installer not in PATH"
+                    export PATH="${HOME}/.platformsh/bin:${PATH}"
+                  fi  
+                # We need the project ID, and the PR as the environment to continue
+                # @todo add something for when we get something that isn't exactly one
+                  activityID=$(p activity:list -t environment.push --state=in_progress -e "${PR_NUMBER}" -p "${PLATFORMSH_PROJECT_ID}" --no-header --columns=ID --format=plain)
+                  echo "activityID={$activityID}" >> $GITHUB_OUTPUT
+            - name: Cancel the activity
+              id: cancel-build-activity
+              run: |
+                  activityID=${{ steps.get-activity-id.outputs.activityID }}    
+                  platform activity:cancel ${{ activityID }} -p "${PLATFORMSH_PROJECT_ID}"
+    naw-you-good:
+        name: Bouncer approves
+        runs-on: ubuntu-latest
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        steps:
+            - name: Confirm this is PR is not from a fork
+              id: confirm-no-rotten-forks
+              run: |
+                echo "This pr is not from a fork."
+                echo "pr repo full name: ${{ github.event.pull_request.head.repo.full_name }}"
+                echo "canonical repo name: ${{ github.repository }}"
