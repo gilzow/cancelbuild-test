@@ -45,23 +45,24 @@ jobs:
           projIDpttrn='\/projects\/([^\/]+)\/integrations'
           if [[ "${integrationURL}" =~ ${projIDpttrn} ]]; then
             echo "PLATFORMSH_PROJECT_ID=${BASH_REMATCH[1]}" >> $GITHUB_ENV
-            echo "Project ID is ${PLATFORMSH_PROJECT_ID}"
+            echo "::notice::Project ID is ${PLATFORMSH_PROJECT_ID}"
           else
             echo "::error::We were unable to extract the project ID from the integration url of ${integrationURL}"
             exit 1
           fi
-      - name: Get the activity ID
+      - name: "Get the activity ID"
         id: get-activity-id
         run: |
           if [[ "${PATH}" != *".platformsh"* ]]; then
-            echo "psh installer not in PATH"
+            echo "::notice::psh installer not in PATH"
             export PATH="${HOME}/.platformsh/bin:${PATH}"
           fi  
           # We need the project ID, and the PR as the environment to continue
           # @todo add something for when we get something that isn't exactly one
-          activityID=$(p activity:list -t environment.push --state=in_progress -e "${PR_NUMBER}" -p "${PLATFORMSH_PROJECT_ID}" --no-header --columns=ID --format=plain)
-          echo "activityID=${activityID}" >> $GITHUB_OUTPUT
-      - name: Cancel the activity
+          newActivityID=$(p activity:list -t environment.push --state=in_progress -e "${PR_NUMBER}" -p "${PLATFORMSH_PROJECT_ID}" --no-header --columns=ID --format=plain)
+          echo "::notice::the activity id is ${newActivityID}"
+          echo "activityID=${newActivityID}" >> $GITHUB_OUTPUT
+      - name: "Cancel the activity"
         id: cancel-build-activity
         run: |
           activityID=${{ steps.get-activity-id.outputs.activityID }}    
