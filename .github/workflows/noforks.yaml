@@ -15,6 +15,8 @@ env:
 jobs:
   no-pr-from-forks:
     name: No PRs from Forks
+    outputs:
+      activityID: ${{ steps.get-activity-id.outputs.activityID }}
     runs-on: ubuntu-latest
     # if the name of the repo from the pull request isnt the name of the repo then it is a fork
     # This might work as well
@@ -61,13 +63,13 @@ jobs:
           # @todo add something for when we get something that isn't exactly one
           newActivityID=$(p activity:list -t environment.push --state=in_progress -e "${PR_NUMBER}" -p "${PLATFORMSH_PROJECT_ID}" --no-header --columns=ID --format=plain)
           echo "::notice::the activity id is ${newActivityID}"
-          #echo "activityID=${newActivityID}" >> $GITHUB_OUTPUT
-          echo "::set-output name=activityID::${newActivityID}"
+          echo "activityID=${newActivityID}" >> $GITHUB_OUTPUT
+          #echo "::set-output name=activityID::${newActivityID}"
       - name: "Cancel the activity"
         id: cancel-build-activity
         run: |
           activityID=${{ steps.get-activity-id.outputs.activityID }}    
-          platform activity:cancel ${{ activityID }} -p "${PLATFORMSH_PROJECT_ID}"
+          platform activity:cancel "${activityID}" -p "${PLATFORMSH_PROJECT_ID}"
   naw-you-good:
     name: Bouncer approves
     runs-on: ubuntu-latest
