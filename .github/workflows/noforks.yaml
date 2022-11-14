@@ -31,7 +31,7 @@ jobs:
           curl -sS https://platform.sh/cli/installer | php
           # for some reason, sourcing our .bashrc file does not successfully prepend our path to PATH
           export PATH="${HOME}/.platformsh/bin:${PATH}"
-          platform p:info
+          platform --version
 
       - name: 'Get project ID'
         run: |
