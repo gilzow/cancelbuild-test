@@ -60,7 +60,7 @@ jobs:
           # We need the project ID, and the PR as the environment to continue
           # @todo add something for when we get something that isn't exactly one
           activityID=$(p activity:list -t environment.push --state=in_progress -e "${PR_NUMBER}" -p "${PLATFORMSH_PROJECT_ID}" --no-header --columns=ID --format=plain)
-          echo "activityID={$activityID}" >> $GITHUB_OUTPUT
+          echo "activityID=${activityID}" >> $GITHUB_OUTPUT
       - name: Cancel the activity
         id: cancel-build-activity
         run: |
