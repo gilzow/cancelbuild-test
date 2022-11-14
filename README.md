@@ -49,3 +49,4 @@ You don't need to have a PHP environment with composer installed.
 
 ## Other demo/skeleton packages
 - [Pimcore Basic Demo](https://github.com/pimcore/demo)
+- to me it looks like the new output syntax just doesnt work
