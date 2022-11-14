@@ -12,6 +12,7 @@ env:
   # IF the above doesnt work, try
   #  PLATFORMSH_CLI_TOKEN: ${{ secrets.PLATFORMSHTOKEN }}
   PR_NUMBER: ${{ github.event.number }}
+  GH_TOKEN: ${{ secrets.GUTHUB_TOKEN }}
 jobs:
   no-pr-from-forks:
     name: No PRs from Forks
